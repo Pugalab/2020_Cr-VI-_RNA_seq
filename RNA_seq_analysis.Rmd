@@ -1,0 +1,97 @@
+---
+title: "RNA-seq - analysis"
+author: "Amenya & Jacek Biesiada"
+date: "July 2020"
+output:
+   html_document:
+        toc: true
+---
+
+# RNA-seq project
+
+```{r setup, include=FALSE}
+   knitr::opts_chunk$set(cache=TRUE)
+   options(knitr.kable.NA = '')
+```
+
+```{r, echo=FALSE}
+library(ggpubr)
+library(tidyverse)
+library(DiffBind)
+library(ggrepel)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#1. Read in the files
+CTRL_vs_CR <- read.delim(file='CTRL_vs_CR.all.gene.result.xls', header=T)
+chronicCr <- read.delim(file='GSE49571_chronic_0.5mM_20_passages.txt', header=T)
+acuteCr <- read.delim(file='GSE56636_acute_Cr_25uM_4hr.txt', header=T)
+
+#2. Filter for genes with <padj 0.05 in both previous datasets
+acuteCr_sig <- acuteCr[which(acuteCr$padj<0.05),]
+chronicCr_sig <- chronicCr[which(chronicCr$padj<0.05),]
+
+#3. Rearranged/renamed columns for easy merging. The aim is to get a union of genes from previous datasets that we can analyze in the present (48 h) dataset. Merged datasets and removed duplicates 
+chronicCr_sig_ord <- chronicCr_sig[, c('geneid','symbol','name','baseMean','baseMeanCtrl','baseMeanCr','foldChange','log2FoldChange','pval','padj','Pr.118','Pr.119','Pr.120','id')]
+names(acuteCr_sig) <- c('geneid','symbol','name','baseMean','baseMeanCtrl','baseMeanCr','foldChange','log2FoldChange','pval','padj','PJ.3','PJ.4','PJ.7','PJ.8')
+acute_chronicCr_merged_sig_1 <- merge(acuteCr_sig, chronicCr_sig_ord, all=TRUE)
+acute_chronicCr_merged_sig_nodup <- acute_chronicCr_merged_sig_1 %>% distinct(acute_chronicCr_merged_sig_1$symbol, .keep_all=TRUE)
+
+#4. Obtaining expression statistics of the union set from the 48 h dataset
+find_genes <- match(CTRL_vs_CR$symbol, acute_chronicCr_merged_sig_nodup$symbol)
+acute_chronic_48 <- CTRL_vs_CR[find_genes,c('symbol','foldChange','log2FoldChange','pval','padj','baseMeanCTRL','baseMeanCR','baseMean')]
+acute_chronic_48_1 <-acute_chronic_48[complete.cases(acute_chronic_48),]
+
+#5. Obtaining expression statistics of the union set from the acute dataset
+find_48_acuteCr <- match(acute_chronic_48_1$symbol, acuteCr$symbol)
+acuteCr_48_match <- acuteCr[find_48_acuteCr,]
+head(acuteCr_48_match)
+
+#6. Obtaining expression statistics of the union set from the chronic dataset
+find_48_chronicCr <- match(acute_chronic_48_1$symbol, chronicCr$symbol)
+chronicCr_48_match <- chronicCr[find_48_chronicCr,]
+head(chronicCr_48_match)
+
+#7. Adding in expression statistics of the union set from the acute dataset
+acute_chronic_48_1$foldChange_acute = acuteCr_48_match$foldChange
+acute_chronic_48_1$log2foldChange_acute = acuteCr_48_match$log2FoldChange
+acute_chronic_48_1$pval_acute = acuteCr_48_match$pval
+acute_chronic_48_1$padj_acute = acuteCr_48_match$padj
+acute_chronic_48_1$baseMean_acute = acuteCr_48_match$baseMean
+acute_chronic_48_1$baseMeanCtrl_acute = acuteCr_48_match$baseMeandmso
+acute_chronic_48_1$baseMeanCr_acute = acuteCr_48_match$'baseMeancr.dmso'
+
+#8. Adding in expression statistics of the union set from the chronic dataset
+acute_chronic_48_1$foldChange_chronic = chronicCr_48_match$foldChange
+acute_chronic_48_1$log2foldChange_chronic = chronicCr_48_match$log2FoldChange
+acute_chronic_48_1$pval_chronic = chronicCr_48_match$pval
+acute_chronic_48_1$padj_chronic = chronicCr_48_match$padj
+acute_chronic_48_1$baseMean_chronic = chronicCr_48_match$baseMean
+acute_chronic_48_1$baseMeanCtrl_chronic = chronicCr_48_match$baseMeanCtrl
+acute_chronic_48_1$baseMeanCr_chronic = chronicCr_48_match$baseMeanCr
+
+#9. Plotting the correlations for foldchange
+fc1 <-ggscatter(acute_chronic_48_1, x='log2FoldChange', y='log2foldChange_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
+fc2 <-ggscatter(acute_chronic_48_1, x='log2FoldChange', y='log2foldChange_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
+fc3 <-ggscatter(acute_chronic_48_1, x='log2foldChange_acute', y='log2foldChange_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
+ggarrange(fc1, fc2, fc3, ncol=2, nrow=2)
+
+#10. Plotting the correlations for baseMean
+basemean1 <-ggscatter(acute_chronic_48_1, x='baseMean', y='baseMean_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
+basemean2 <-ggscatter(acute_chronic_48_1, x='baseMean', y='baseMean_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
+basemean3 <-ggscatter(acute_chronic_48_1, x='baseMean_acute', y='baseMean_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
+ggarrange(basemean1, basemean2, basemean3, ncol=2, nrow=2)
+
+#11. Plotting the correlations for baseMeanCtrl
+baseCtrl1 <-ggscatter(acute_chronic_48_1, x='baseMeanCTRL', y='baseMeanCtrl_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
+baseCtrl2 <-ggscatter(acute_chronic_48_1, x='baseMeanCTRL', y='baseMeanCtrl_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
+baseCtrl3 <-ggscatter(acute_chronic_48_1, x='baseMeanCtrl_acute', y='baseMeanCtrl_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
+ggarrange(baseCtrl1, baseCtrl2, baseCtrl3, ncol=2, nrow=2)
+
+#12. Plotting the correlations for baseMeanCr
+baseCr1 <-ggscatter(acute_chronic_48_1, x='baseMeanCR', y='baseMeanCr_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
+baseCr2 <-ggscatter(acute_chronic_48_1, x='baseMeanCR', y='baseMeanCr_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
+baseCr3 <-ggscatter(acute_chronic_48_1, x='baseMeanCr_acute', y='baseMeanCr_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
+ggarrange(baseCr1, baseCr2, baseCr3, ncol=2, nrow=2)
+
+```
