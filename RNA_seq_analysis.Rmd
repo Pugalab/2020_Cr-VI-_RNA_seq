@@ -45,12 +45,12 @@ acute_chronic_48_1 <-acute_chronic_48[complete.cases(acute_chronic_48),]
 #5. Obtaining expression statistics of the union set from the acute dataset
 find_48_acuteCr <- match(acute_chronic_48_1$symbol, acuteCr$symbol)
 acuteCr_48_match <- acuteCr[find_48_acuteCr,]
-head(acuteCr_48_match)
+dim(acuteCr_48_match)
 
 #6. Obtaining expression statistics of the union set from the chronic dataset
 find_48_chronicCr <- match(acute_chronic_48_1$symbol, chronicCr$symbol)
 chronicCr_48_match <- chronicCr[find_48_chronicCr,]
-head(chronicCr_48_match)
+dim(chronicCr_48_match)
 
 #7. Adding in expression statistics of the union set from the acute dataset
 acute_chronic_48_1$foldChange_acute = acuteCr_48_match$foldChange
