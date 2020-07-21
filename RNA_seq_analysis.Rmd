@@ -3,8 +3,10 @@ title: "RNA-seq - analysis"
 author: "Amenya & Jacek Biesiada"
 date: "July 2020"
 output:
-   html_document:
-        toc: true
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
 ---
 
 # RNA-seq project
@@ -17,8 +19,6 @@ output:
 ```{r, echo=FALSE}
 library(ggpubr)
 library(tidyverse)
-library(DiffBind)
-library(ggrepel)
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -74,24 +74,27 @@ acute_chronic_48_1$baseMeanCr_chronic = chronicCr_48_match$baseMeanCr
 fc1 <-ggscatter(acute_chronic_48_1, x='log2FoldChange', y='log2foldChange_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
 fc2 <-ggscatter(acute_chronic_48_1, x='log2FoldChange', y='log2foldChange_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
 fc3 <-ggscatter(acute_chronic_48_1, x='log2foldChange_acute', y='log2foldChange_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
-ggarrange(fc1, fc2, fc3, ncol=2, nrow=2)
+fc_all <-ggarrange(fc1, fc2, fc3, ncol=2, nrow=2)
+annotate_figure(fc_all, top = text_grob("FoldChange", color = "red", face = "bold", size = 14))
 
 #10. Plotting the correlations for baseMean
 basemean1 <-ggscatter(acute_chronic_48_1, x='baseMean', y='baseMean_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
 basemean2 <-ggscatter(acute_chronic_48_1, x='baseMean', y='baseMean_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
 basemean3 <-ggscatter(acute_chronic_48_1, x='baseMean_acute', y='baseMean_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
-ggarrange(basemean1, basemean2, basemean3, ncol=2, nrow=2)
+basemean_all <-ggarrange(basemean1, basemean2, basemean3, ncol=2, nrow=2)
+annotate_figure(basemean_all, top = text_grob("baseMean", color = "red", face = "bold", size = 14))
 
 #11. Plotting the correlations for baseMeanCtrl
 baseCtrl1 <-ggscatter(acute_chronic_48_1, x='baseMeanCTRL', y='baseMeanCtrl_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
 baseCtrl2 <-ggscatter(acute_chronic_48_1, x='baseMeanCTRL', y='baseMeanCtrl_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
 baseCtrl3 <-ggscatter(acute_chronic_48_1, x='baseMeanCtrl_acute', y='baseMeanCtrl_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
-ggarrange(baseCtrl1, baseCtrl2, baseCtrl3, ncol=2, nrow=2)
+baseCtrl_all <-ggarrange(baseCtrl1, baseCtrl2, baseCtrl3, ncol=2, nrow=2)
+annotate_figure(baseCtrl_all, top = text_grob("baseMeanCtrl", color = "red", face = "bold", size = 14))
 
 #12. Plotting the correlations for baseMeanCr
 baseCr1 <-ggscatter(acute_chronic_48_1, x='baseMeanCR', y='baseMeanCr_acute', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="4h_previous")
 baseCr2 <-ggscatter(acute_chronic_48_1, x='baseMeanCR', y='baseMeanCr_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="48h", ylab="20_passage_previous")
 baseCr3 <-ggscatter(acute_chronic_48_1, x='baseMeanCr_acute', y='baseMeanCr_chronic', add='reg.line', conf.int=TRUE, cor.coef=TRUE, cor.method='spearman', xlab="4h_previous", ylab="20_passage_previous")
-ggarrange(baseCr1, baseCr2, baseCr3, ncol=2, nrow=2)
-
+baseCr_all <-ggarrange(baseCr1, baseCr2, baseCr3, ncol=2, nrow=2)
+annotate_figure(baseCr_all, top = text_grob("baseMeanCr", color = "red", face = "bold", size = 14))
 ```
